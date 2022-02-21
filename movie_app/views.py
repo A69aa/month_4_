@@ -32,6 +32,7 @@ def movie_list_view(request):
     return Response(data=data)
 
 
+
 @api_view(['GET'])
 def movie_detail_view(request,id):
     try:
