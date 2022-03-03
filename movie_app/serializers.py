@@ -3,6 +3,8 @@ from movie_app.models import Director, Review,Movie
 from rest_framework.serializers import SerializerMethodField
 from . import models
 from rest_framework.exceptions import ValidationError
+from django.contrib.auth.models import User
+from rest_framework.exceptions import ValidationError
 
 
 class DirectorSerializers(serializers.ModelSerializer):
@@ -48,4 +50,24 @@ class MovieCreateUpdateSerializer(serializers.Serializer):
     def validate_director_id(self, attrs):
         if models.Director.objects.filter(id=attrs).count==0:
             raise ValidationError(f'message:{attrs} not found')
+
+
+class UserCreateSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+
+    def validate_username(self,username):
+        if User.objects.filter(username=username):
+            raise ValidationError('user with this username is already exists')
+        return username
+
+
+class UserAuthorizationSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate_token(self,token):
+        if User.objects.filter(token=token):
+            raise ValidationError('this user is already logged in')
 
