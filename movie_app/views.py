@@ -4,7 +4,17 @@ from movie_app.serializers import DirectorSerializers, ReviewSerializers, MovieS
 from movie_app.models import Movie, Director,Review
 from rest_framework import status
 from . import serializers
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
+from rest_framework import generics, permissions
 
+
+
+class MovieList(generics.ListAPIView):
+    queryset = Movie.objects.all()
+    serializer_class = MovieSerializers
+    permission_classes = [permissions.IsAuthenticated]
 
 @api_view(['GET','POST'])
 def director_list_view(request):
@@ -138,3 +148,35 @@ def review_detail_view(request,id):
             return Response(data=ReviewSerializers(reviews).data)
 
 
+@api_view(['POST'])
+def authorization(request):
+    if request.method == 'POST':
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username,password=password)
+        if user:
+            try:
+                token = Token.objects.get(user=user)
+            except Token.DoesNotExist:
+                token = Token.objects.create(user=user)
+                return Response(data={'key':token.key})
+
+        return Response(data={'error':'User not found'},
+                        status=status.HTTP_404_NOT_FOUND)
+
+
+
+@api_view(['POST'])
+def registration(request):
+    if request.method == 'POST':
+        username = request.data.get('username')
+        password = request.data.get('password')
+        User.objects.create_user(username=username,password=password)
+        return Response(data={'message':'User created'},
+                        status=status.HTTP_201_CREATED)
+
+
+
+#
+# @api_view(['GET'])
+# def user_email():
